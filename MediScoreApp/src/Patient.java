@@ -35,6 +35,7 @@ public class Patient {
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
+    Map<String, Integer> individualScores = new HashMap<>();
 
     public Patient(String name, AirOrOxygen airOrOxygen, Consciousness consciousness,
                    Integer respirationRange, Integer spo2, float temperature) {
@@ -75,7 +76,8 @@ public class Patient {
     }
 
     public void setRespirationRate(Integer respirationRate) {
-        this.respirationRange = respirationRate;}
+        this.respirationRange = respirationRate;
+    }
 
     public Integer getSpo2() {
         return spo2;
@@ -93,16 +95,17 @@ public class Patient {
         this.temperature = temperature;
     }
 
-    public Map<String, Integer> mediScoreFunction(Patient a) throws IllegalArgumentException {
-        Map<String, Integer> individualScores = new HashMap<>();
+    public void mediScoreFunction(Patient a) throws IllegalArgumentException {
+        //Map<String, Integer> individualScores = new HashMap<>();
+
         int finalScore = 0;
 
         int airOrOxygenScore = a.airOrOxygen.getRespValue();
-        individualScores.put("Air or Oxygen", airOrOxygenScore);
+        individualScores.put("Air or Oxygen Score", airOrOxygenScore);
         finalScore += airOrOxygenScore;
 
         int consciousnessScore = a.consciousness.getConsciousValue();
-        individualScores.put("Consciousness", consciousnessScore);
+        individualScores.put("Consciousness Score", consciousnessScore);
         finalScore += consciousnessScore;
 
         int respirationRateScore;
@@ -117,34 +120,92 @@ public class Patient {
         } else {
             respirationRateScore = 3;
         }
-        individualScores.put("Respiration Range", respirationRateScore);
+        individualScores.put("Respiration Range Score", respirationRateScore);
         finalScore += respirationRateScore;
 
         int spo2Score;
-        if(a.spo2 >= 97 )
+        switch (a.airOrOxygen) {
+            case OXYGEN -> {
+                if (a.spo2 >= 97) {
+                    spo2Score = 3;
+                } else if (a.spo2 >= 95) {
+                    spo2Score = 2;
+                } else if (a.spo2 >= 93) {
+                    spo2Score = 1;
+                } else if (a.spo2 >= 88) {
+                    spo2Score = 0;
+                } else if (a.spo2 >= 86) {
+                    spo2Score = 1;
+                } else if (a.spo2 >= 84) {
+                    spo2Score = 2;
+                } else {
+                    spo2Score = 3;
+                }
+                individualScores.put("SpO2 Score", spo2Score);
+                finalScore += spo2Score;
+            }
+            case AIR -> {
+                if (a.spo2 >= 93) {
+                    spo2Score = 0;
+                } else if (a.spo2 >= 86) {
+                    spo2Score = 1;
+                } else if (a.spo2 >= 84) {
+                    spo2Score = 2;
+                } else {
+                    spo2Score = 3;
+                }
+                individualScores.put("SpO2 Score", spo2Score);
+                finalScore += spo2Score;
+            }
+        }
+        int temperatureScore;
+        if (a.temperature >= 39.1) {
+            temperatureScore = 2;
+        } else if (a.temperature >= 38.1) {
+            temperatureScore = 1;
+        } else if (a.temperature >= 36.1) {
+            temperatureScore = 0;
+        } else if (a.temperature >= 35.1) {
+            temperatureScore = 1;
+        } else {
+            temperatureScore = 3;
+        }
+        individualScores.put("Temperature Score", temperatureScore);
+        finalScore += temperatureScore;
+
+
+        individualScores.put("Final Score", finalScore);
+
+
+
+       // System.out.println(individualScores);
+
+    }
 
 
         @Override
         public String toString () {
-            String format = "| %-17s | %-11s |\n";
-            String line = "+-------------------+-------------+\n";
+            String format = "| %-17s | %-11s | %-5s |\n";
+            String line = "+-------------------+-------------+-------+\n";
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append("Name: ").append(name).append("\n");
             sb.append(line);
-            sb.append(String.format(format, "Property", "Observation"));
+            sb.append(String.format(format, "Property", "Observation", "Score"));
             sb.append(line);
-            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue()));
+            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score")));
             sb.append(line);
-            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue()));
+            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score")));
             sb.append(line);
-            sb.append(String.format(format, "Respiration Range", respirationRange));
+            sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score")));
             sb.append(line);
-            sb.append(String.format(format, "SpO2", spo2));
+            sb.append(String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score")));
             sb.append(line);
-            sb.append(String.format(format, "Temperature", temperature));
+            sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score")));
             sb.append(line);
+            sb.append("The patients final Medi score is ").append(individualScores.get("Final Score")).append("\n");
+            //System.out.println("Debug: individualScores = " + individualScores);
             return sb.toString();
         }
     }
-}
+
