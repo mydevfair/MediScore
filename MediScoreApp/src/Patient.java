@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Patient {
-    protected enum AirOrOxygen {
+    public enum AirOrOxygen {
         AIR(0), OXYGEN(2);
         private final int respValue;
 
@@ -15,7 +15,7 @@ public class Patient {
         }
     }
 
-    protected enum Consciousness {
+    public enum Consciousness {
         ALERT(0), CVPU(3);
         private final int consciousValue;
 
@@ -75,8 +75,7 @@ public class Patient {
     }
 
     public void setRespirationRate(Integer respirationRate) {
-        this.respirationRange = respirationRange;
-    }
+        this.respirationRange = respirationRate;}
 
     public Integer getSpo2() {
         return spo2;
@@ -123,6 +122,7 @@ public class Patient {
 
         int spo2Score;
         if(a.spo2 >= 97 )
+
 
         @Override
         public String toString () {
