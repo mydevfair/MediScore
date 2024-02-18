@@ -32,7 +32,6 @@ public class Patient {
     private String name;
     private AirOrOxygen airOrOxygen;
     private Consciousness consciousness;
-
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
