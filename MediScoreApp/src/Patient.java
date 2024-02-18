@@ -97,7 +97,6 @@ public class Patient {
     }
 
     public void mediScoreFunction(Patient a) throws IllegalArgumentException {
-        //Map<String, Integer> individualScores = new HashMap<>();
 
         int finalScore = 0;
 
