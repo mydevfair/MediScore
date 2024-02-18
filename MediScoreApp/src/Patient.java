@@ -201,7 +201,7 @@ public class Patient {
     }
 
     public String Spo2Comment(Patient patient) {
-        if (airOrOxygen == AirOrOxygen.AIR) {
+        if (airOrOxygen == AirOrOxygen.OXYGEN) {
             if (spo2 >= 97) {
                 return "As the patient is breathing oxygen, this is very elevated.";
             } else if (spo2 >= 95) {
