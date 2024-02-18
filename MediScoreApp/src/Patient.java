@@ -36,7 +36,6 @@ public class Patient {
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
-    protected static final DecimalFormat df = new DecimalFormat("0.0");
     Map<String, Integer> individualScores = new HashMap<>();
 
     public Patient(String name, AirOrOxygen airOrOxygen, Consciousness consciousness,
@@ -46,7 +45,7 @@ public class Patient {
         this.consciousness = consciousness;
         this.respirationRange = respirationRange;
         this.spo2 = spo2;
-        this.temperature = temperature;
+        this.temperature = Math.round(temperature * 10) / 10.0f;
     }
 
     public String getName() {
@@ -102,11 +101,11 @@ public class Patient {
 
         int finalScore = 0;
 
-        int airOrOxygenScore = a.airOrOxygen.getRespValue();
+        int airOrOxygenScore = airOrOxygen.getRespValue();
         individualScores.put("Air or Oxygen Score", airOrOxygenScore);
         finalScore += airOrOxygenScore;
 
-        int consciousnessScore = a.consciousness.getConsciousValue();
+        int consciousnessScore = consciousness.getConsciousValue();
         individualScores.put("Consciousness Score", consciousnessScore);
         finalScore += consciousnessScore;
 
@@ -179,31 +178,82 @@ public class Patient {
         individualScores.put("Final Score", finalScore);
 
 
+    }
 
-       // System.out.println(individualScores);
+    public String AirOrOxygenComment(Patient patient) {
+        if (airOrOxygen == AirOrOxygen.AIR) {
+            return "The patient is breathing air, and does not require supplementary oxygen.";
+        } else {
+            return "The patient requires supplementary oxygen.";
+        }
+    }
 
+    public String ConsciousnessComment(Patient patient) {
+        if (consciousness == Consciousness.ALERT) {
+            return "The patient is alert";
+        } else if (consciousness == Consciousness.CVPU1) {
+            return "The patient is unconscious or confused severity 1.";
+        } else if (consciousness == Consciousness.CVPU2) {
+            return "The patient is unconscious or confused severity 2.";
+        } else {
+            return "The patient is unconscious or confused severity 3.";
+        }
+    }
+
+    public String Spo2Comment(Patient patient) {
+        if (airOrOxygen == AirOrOxygen.AIR) {
+            if (spo2 >= 97) {
+                return "As the patient is breathing oxygen, this is very elevated.";
+            } else if (spo2 >= 95) {
+                return "As the patient is breathing oxygen, this is quite elevated.";
+            } else if (spo2 >= 93) {
+                return "As the patient is breathing oxygen, this is elevated.";
+            } else if (spo2 >= 88) {
+                return "This is a normal range for patients breathing either air or oxygen.";
+            } else if (spo2 >= 86) {
+                return "As the patient is breathing oxygen, this is low.";
+            } else if (spo2 >= 84) {
+                return "As the patient is breathing oxygen, this is very low.";
+            } else {
+                return "The patient's SpO2 is dangerously low";
+            }
+        } else {
+            if (spo2 >= 97) {
+                return "The patient's SpO2 is within the normal range";
+            } else if (spo2 >= 93) {
+                return "As the patient is breathing air, this is a normal range.";
+            } else if (spo2 >= 88) {
+                return "This is a normal range for patients breathing either air or oxygen.";
+            } else if (spo2 >= 86) {
+                return "The patient's SpO2 is low";
+            } else if (spo2 >= 84) {
+                return "The patient's SpO2 is very low";
+            } else {
+                return "The patient's SpO2 is dangerously low";
+            }
+        }
     }
 
 
         @Override
         public String toString () {
-            String format = "| %-17s | %-11s | %-5s |\n";
-            String line = "+-------------------+-------------+-------+\n";
+            String format = "| %-17s | %-11s | %-5s | %-75s |\n";
+            String line = "+-------------------+-------------+-------+-----------------------------------------------------------------------------+\n";
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append("Name: ").append(name).append("\n");
             sb.append(line);
-            sb.append(String.format(format, "Property", "Observation", "Score"));
+            sb.append(String.format(format, "Property", "Observation", "Score", "Comment"));
             sb.append(line);
-            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score")));
+            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score"), AirOrOxygenComment(this)));
             sb.append(line);
-            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score")));
+            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score"), ConsciousnessComment(this)));
             sb.append(line);
-            sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score")));
+            sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score"), ""));
             sb.append(line);
-            sb.append(String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score")));
+            sb.append(String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score"), Spo2Comment(this)));
             sb.append(line);
-            sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score")));
+            sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), " "));
             sb.append(line);
             sb.append("The patients final Medi score is ").append(individualScores.get("Final Score")).append("\n");
             //System.out.println("Debug: individualScores = " + individualScores);
