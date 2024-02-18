@@ -1,3 +1,4 @@
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public class Patient {
     }
 
     public enum Consciousness {
-        ALERT(0), CVPU(3);
+        ALERT(0), CVPU1(1), CVPU2(2), CVPU3(3);
         private final int consciousValue;
 
         Consciousness(int consciousValue) {
@@ -35,6 +36,7 @@ public class Patient {
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
+    protected static final DecimalFormat df = new DecimalFormat("0.0");
     Map<String, Integer> individualScores = new HashMap<>();
 
     public Patient(String name, AirOrOxygen airOrOxygen, Consciousness consciousness,
