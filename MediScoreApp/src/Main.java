@@ -14,8 +14,14 @@ public class Main {
         patient3.calculateMediScore(patient3);
 
         System.out.println(patient1);
-        System.out.println(patient2);
-        System.out.println(patient3);
+
+        patient1.addPreviousMediScore(patient1);
+
+        patient1.updatePatient("patient 1", Patient.AirOrOxygen.OXYGEN, Patient.Consciousness.CVPU, 10, 70, 37.15638f);
+
+        patient1.calculateMediScore(patient1);
+
+        //patient1.scoreAlert(patient1);
 
 
     }
