@@ -1,4 +1,3 @@
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +16,7 @@ public class Patient {
     }
 
     public enum Consciousness {
-        ALERT(0), CVPU1(1), CVPU2(2), CVPU3(3);
+        ALERT(0), CVPU(3);
         private final int consciousValue;
 
         Consciousness(int consciousValue) {
@@ -48,139 +47,102 @@ public class Patient {
         this.temperature = Math.round(temperature * 10) / 10.0f;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public AirOrOxygen getAirOrOxygen() {
         return airOrOxygen;
-    }
-
-    public void setAirOrOxygen(AirOrOxygen airOrOxygen) {
-        this.airOrOxygen = airOrOxygen;
     }
 
     public Consciousness getConsciousness() {
         return consciousness;
     }
 
-    public void setConsciousness(Consciousness consciousness) {
-        this.consciousness = consciousness;
-    }
-
-    public Integer getRespirationRange() {
-        return respirationRange;
-    }
-
-    public void setRespirationRate(Integer respirationRate) {
-        this.respirationRange = respirationRate;
-    }
-
-    public Integer getSpo2() {
-        return spo2;
-    }
-
-    public void setSpo2(Integer spo2) {
-        this.spo2 = spo2;
-    }
-
-    public float getTemperature() {
-        return temperature;
-    }
-
-    public void setTemperature(float temperature) {
-        this.temperature = temperature;
-    }
-
-    public void mediScoreFunction(Patient a) throws IllegalArgumentException {
-        //Map<String, Integer> individualScores = new HashMap<>();
+    public void calculateMediScore(Patient patient) {
+        individualScores.put("Air or Oxygen Score", calculateAirOrOxygenScore(patient));
+        individualScores.put("Consciousness Score", calculateConsciousnessScore(patient));
+        individualScores.put("Respiration Range Score", calculateRespirationRateScore(patient));
+        individualScores.put("SpO2 Score", calculateSpo2Score(patient));
+        individualScores.put("Temperature Score", calculateTemperatureScore(patient));
 
         int finalScore = 0;
+        for (Integer score : individualScores.values()) {
+            finalScore += score;
+        }
+        individualScores.put("Final Score", finalScore);
 
-        int airOrOxygenScore = airOrOxygen.getRespValue();
-        individualScores.put("Air or Oxygen Score", airOrOxygenScore);
-        finalScore += airOrOxygenScore;
+    }
 
-        int consciousnessScore = consciousness.getConsciousValue();
-        individualScores.put("Consciousness Score", consciousnessScore);
-        finalScore += consciousnessScore;
+    private static int calculateAirOrOxygenScore(Patient patient) {
+        return patient.getAirOrOxygen().getRespValue();
+    }
 
+    private static int calculateConsciousnessScore(Patient patient) {
+        return patient.getConsciousness().getConsciousValue();
+    }
+
+    private static int calculateRespirationRateScore(Patient patient) {
         int respirationRateScore;
-        if (a.respirationRange >= 25) {
+        if (patient.respirationRange >= 25) {
             respirationRateScore = 3;
-        } else if (a.respirationRange >= 21) {
+        } else if (patient.respirationRange >= 21) {
             respirationRateScore = 2;
-        } else if (a.respirationRange >= 12) {
+        } else if (patient.respirationRange >= 12) {
             respirationRateScore = 0;
-        } else if (a.respirationRange >= 9) {
+        } else if (patient.respirationRange >= 9) {
             respirationRateScore = 1;
         } else {
             respirationRateScore = 3;
         }
-        individualScores.put("Respiration Range Score", respirationRateScore);
-        finalScore += respirationRateScore;
-
-        int spo2Score;
-        switch (a.airOrOxygen) {
-            case OXYGEN -> {
-                if (a.spo2 >= 97) {
-                    spo2Score = 3;
-                } else if (a.spo2 >= 95) {
-                    spo2Score = 2;
-                } else if (a.spo2 >= 93) {
-                    spo2Score = 1;
-                } else if (a.spo2 >= 88) {
-                    spo2Score = 0;
-                } else if (a.spo2 >= 86) {
-                    spo2Score = 1;
-                } else if (a.spo2 >= 84) {
-                    spo2Score = 2;
-                } else {
-                    spo2Score = 3;
-                }
-                individualScores.put("SpO2 Score", spo2Score);
-                finalScore += spo2Score;
-            }
-            case AIR -> {
-                if (a.spo2 >= 93) {
-                    spo2Score = 0;
-                } else if (a.spo2 >= 86) {
-                    spo2Score = 1;
-                } else if (a.spo2 >= 84) {
-                    spo2Score = 2;
-                } else {
-                    spo2Score = 3;
-                }
-                individualScores.put("SpO2 Score", spo2Score);
-                finalScore += spo2Score;
-            }
-        }
-        int temperatureScore;
-        if (a.temperature >= 39.1) {
-            temperatureScore = 2;
-        } else if (a.temperature >= 38.1) {
-            temperatureScore = 1;
-        } else if (a.temperature >= 36.1) {
-            temperatureScore = 0;
-        } else if (a.temperature >= 35.1) {
-            temperatureScore = 1;
-        } else {
-            temperatureScore = 3;
-        }
-        individualScores.put("Temperature Score", temperatureScore);
-        finalScore += temperatureScore;
-
-
-        individualScores.put("Final Score", finalScore);
-
-
+        return respirationRateScore;
     }
 
-    public String AirOrOxygenComment(Patient patient) {
+    private static int calculateSpo2Score(Patient patient) {
+        return switch (patient.getAirOrOxygen()) {
+            case AIR -> calculateSpo2ScoreForAir(patient);
+            case OXYGEN -> calculateSpo2ScoreForOxygen(patient);
+        };
+    }
+
+    private static int calculateSpo2ScoreForAir(Patient patient) {
+        int spo2Score;
+        if (patient.spo2 >= 93) {
+            spo2Score = 0;
+        } else if (patient.spo2 >= 86) {
+            spo2Score = 1;
+        } else if (patient.spo2 >= 84) {
+            spo2Score = 2;
+        } else {
+            spo2Score = 3;
+        }
+        return spo2Score;
+    }
+
+    private static int calculateSpo2ScoreForOxygen(Patient patient) {
+        int spo2Score;
+        if (patient.spo2 >= 97) {
+            spo2Score = 0;
+        } else if (patient.spo2 >= 93) {
+            spo2Score = 1;
+        } else if (patient.spo2 >= 88) {
+            spo2Score = 2;
+        } else {
+            spo2Score = 3;
+        }
+        return spo2Score;
+    }
+
+    private static int calculateTemperatureScore(Patient patient) {
+        int temperatureScore;
+        if (patient.temperature >= 37.5) {
+            temperatureScore = 2;
+        } else if (patient.temperature >= 37.1) {
+            temperatureScore = 1;
+        } else {
+            temperatureScore = 0;
+        }
+        return temperatureScore;
+    }
+
+
+    public String AirOrOxygenComment() {
         if (airOrOxygen == AirOrOxygen.AIR) {
             return "The patient is breathing air, and does not require supplementary oxygen.";
         } else {
@@ -188,49 +150,54 @@ public class Patient {
         }
     }
 
-    public String ConsciousnessComment(Patient patient) {
+    public String ConsciousnessComment() {
         if (consciousness == Consciousness.ALERT) {
-            return "The patient is alert";
-        } else if (consciousness == Consciousness.CVPU1) {
-            return "The patient is unconscious or confused severity 1.";
-        } else if (consciousness == Consciousness.CVPU2) {
-            return "The patient is unconscious or confused severity 2.";
+            return "The patient is conscious";
         } else {
-            return "The patient is unconscious or confused severity 3.";
+            return "The patient is unconscious or confused.";
         }
     }
 
     public String Spo2Comment(Patient patient) {
-        if (airOrOxygen == AirOrOxygen.AIR) {
-            if (spo2 >= 97) {
-                return "As the patient is breathing oxygen, this is very elevated.";
-            } else if (spo2 >= 95) {
-                return "As the patient is breathing oxygen, this is quite elevated.";
-            } else if (spo2 >= 93) {
-                return "As the patient is breathing oxygen, this is elevated.";
-            } else if (spo2 >= 88) {
-                return "This is a normal range for patients breathing either air or oxygen.";
-            } else if (spo2 >= 86) {
-                return "As the patient is breathing oxygen, this is low.";
-            } else if (spo2 >= 84) {
-                return "As the patient is breathing oxygen, this is very low.";
-            } else {
-                return "The patient's SpO2 is dangerously low";
-            }
+        return switch (patient.getAirOrOxygen()) {
+            case AIR -> Spo2CommentForAir();
+            case OXYGEN -> Spo2CommentForOxygen();
+        };
+    }
+
+    public String Spo2CommentForAir() {
+        if (spo2 >= 97) {
+            return "As the patient is breathing air, this is a normal range.";
+        } else if (spo2 >= 95) {
+            return "As the patient is breathing air, this is a normal range.";
+        } else if (spo2 == 94) {
+            return "As the patient is breathing air, this is a normal range.";
+        } else if (spo2 >= 88) {
+            return "This is a normal range for patients breathing either air or oxygen.";
+        } else if (spo2 >= 86) {
+            return "This is a slightly low range for patients breathing either air or oxygen.";
+        } else if (spo2 >= 84) {
+            return "This is a low range for patients breathing either air or oxygen.";
         } else {
-            if (spo2 >= 97) {
-                return "The patient's SpO2 is within the normal range";
-            } else if (spo2 >= 93) {
-                return "As the patient is breathing air, this is a normal range.";
-            } else if (spo2 >= 88) {
-                return "This is a normal range for patients breathing either air or oxygen.";
-            } else if (spo2 >= 86) {
-                return "The patient's SpO2 is low";
-            } else if (spo2 >= 84) {
-                return "The patient's SpO2 is very low";
-            } else {
-                return "The patient's SpO2 is dangerously low";
-            }
+            return "The patient's oxygen saturation is dangerously low.";
+        }
+    }
+
+    public String Spo2CommentForOxygen() {
+        if (spo2 >= 97) {
+            return "As the patient is breathing oxygen, this is very elevated.";
+        } else if (spo2 >= 95) {
+            return "As the patient is breathing oxygen, this is elevated.";
+        } else if (spo2 >= 93) {
+            return "As the patient is breathing oxygen, this is slightly elevated.";
+        } else if (spo2 >= 88) {
+            return "This is a normal range for patients breathing either air or oxygen.";
+        } else if (spo2 >= 86) {
+            return "This is a slightly low range for patients breathing either air or oxygen.";
+        } else if (spo2 >= 84) {
+            return "This is a low range for patients breathing either air or oxygen.";
+        } else {
+            return "This is a very low range for patients breathing either air or oxygen.";
         }
     }
 
@@ -245,9 +212,9 @@ public class Patient {
             sb.append(line);
             sb.append(String.format(format, "Property", "Observation", "Score", "Comment"));
             sb.append(line);
-            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score"), AirOrOxygenComment(this)));
+            sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score"), AirOrOxygenComment()));
             sb.append(line);
-            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score"), ConsciousnessComment(this)));
+            sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score"), ConsciousnessComment()));
             sb.append(line);
             sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score"), ""));
             sb.append(line);
