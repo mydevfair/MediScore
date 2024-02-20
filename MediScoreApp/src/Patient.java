@@ -32,30 +32,29 @@ public class Patient {
     // Attributes of the Patient class
     private String name;
     private AirOrOxygen airOrOxygen;
-    private Consciousness consciousness;
-
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
+    private int airOrOxygenObs;
+    private int consciousnessObs;
     Map<String, Integer> individualScores = new HashMap<>();
     Map<String, Integer> previousMediScores = new HashMap<>();
 
     // Constructor for the Patient class
-    public Patient(String name, AirOrOxygen airOrOxygen, Consciousness consciousness,
+    public Patient(String name, int airOrOxygenObs, int consciousnessObs,
                    Integer respirationRange, Integer spo2, float temperature) {
         this.name = name;
-        this.airOrOxygen = airOrOxygen;
-        this.consciousness = consciousness;
+        this.airOrOxygenObs = airOrOxygenObs;
+        this.consciousnessObs = consciousnessObs;
         this.respirationRange = respirationRange;
         this.spo2 = spo2;
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
     }
 
-    public void updatePatient(String name, AirOrOxygen airOrOxygen, Consciousness consciousness,
+    public void updatePatient(int airOrOxygenObs, int consciousnessObs,
                               Integer respirationRange, Integer spo2, float temperature) {
-        this.name = name;
-        this.airOrOxygen = airOrOxygen;
-        this.consciousness = consciousness;
+        this.airOrOxygenObs = airOrOxygenObs;
+        this.consciousnessObs = consciousnessObs;
         this.respirationRange = respirationRange;
         this.spo2 = spo2;
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
@@ -68,37 +67,44 @@ public class Patient {
         return airOrOxygen;
     }
 
-    public Consciousness getConsciousness() {
-        return consciousness;
-    }
-
     // Method to add the previous MediScore for the patient
 
     public void addPreviousMediScore(Patient patient) {
         int finalScore;
         name = patient.getName();
         finalScore = patient.individualScores.get("Final Score");
-        previousMediScores.put(name, finalScore);
+        previousMediScores.put("Final Score", finalScore);
     }
     public void scoreAlert(Patient patient) {
-        int previousScore = patient.previousMediScores.get("Final Score");
-        int newScore = patient.individualScores.get("Final Score");
-
-        int difference = Integer.compare(newScore, previousScore);
-
-        if (difference > 2) {
-            System.out.println("The patient's MediScore has increased by more than 2 points.");
-        } else if (difference < -2) {
-            System.out.println("The patient's MediScore has decreased by more than 2 points.");
+        if (previousMediScores.isEmpty()) {
+            System.out.println(patient.getName() + " Has no previous score to compare with.");
         } else {
-            System.out.println("The patient's MediScore has not changed by more than 2 points.");
+            int previousScore = patient.previousMediScores.get("Final Score");
+            int newScore = patient.individualScores.get("Final Score");
+            int difference = newScore - previousScore;
+            if (previousMediScores.isEmpty()) {
+                System.out.println(patient.getName() + " Has no previous score to compare with.");
+            } else if (difference > 2) {
+                System.out.println("ALERT!!!! " + patient.getName() + " MediScore has changed by more than 2 points.");
+            } else {
+                System.out.println(patient.getName() + " MediScore has not changed by more than 2 points.");
+            }
         }
     }
 
+    public void printTable(Patient patient){
+        System.out.println(patient);
+    }
+
+
+    public void clearMap(Map<String, Integer> map) {
+        map.clear();
+    }
     // Method to calculate the MediScore for the patient.
     // It gets individual scores from separate methods and then adds them up to get the final score.
     // It also stores the individual scores in a map.
     public void calculateMediScore(Patient patient) {
+        clearMap(individualScores);
         individualScores.put("Air or Oxygen Score", calculateAirOrOxygenScore(patient));
         individualScores.put("Consciousness Score", calculateConsciousnessScore(patient));
         individualScores.put("Respiration Range Score", calculateRespirationRateScore(patient));
@@ -110,7 +116,9 @@ public class Patient {
             finalScore += score;
         }
         individualScores.put("Final Score", finalScore);
-
+        printTable(patient);
+        scoreAlert(patient);
+        addPreviousMediScore(patient);
     }
 
     // Methods to calculate individual scores for each attribute of the patient
@@ -118,11 +126,19 @@ public class Patient {
 
     // The following method calculate the Air or Oxygen score for the patient
     private static int calculateAirOrOxygenScore(Patient patient) {
-        return patient.getAirOrOxygen().getRespValue();
+        if (patient.airOrOxygenObs == 0) {
+            return AirOrOxygen.AIR.getRespValue();
+        } else {
+            return AirOrOxygen.OXYGEN.getRespValue();
+        }
     }
     // The following method calculates the consciousness score for the patient
     private static int calculateConsciousnessScore(Patient patient) {
-        return patient.getConsciousness().getConsciousValue();
+        if (patient.consciousnessObs == 0) {
+            return Consciousness.ALERT.getConsciousValue();
+        } else {
+            return Consciousness.CVPU.getConsciousValue();
+        }
     }
     // The following method calculates the respiration rate score for the patient
     private static int calculateRespirationRateScore(Patient patient) {
@@ -144,9 +160,11 @@ public class Patient {
     // I used a switch statement to calculate the score based on whether
     // the patient is breathing air or oxygen
     private static int calculateSpo2Score(Patient patient) {
-        return switch (patient.getAirOrOxygen()) {
-            case AIR -> calculateSpo2ScoreForAir(patient);
-            case OXYGEN -> calculateSpo2ScoreForOxygen(patient);
+        return switch (patient.airOrOxygenObs) {
+            case 0 -> calculateSpo2ScoreForAir(patient);
+            case 2 -> calculateSpo2ScoreForOxygen(patient);
+            default -> throw new java.lang.IllegalStateException("Unexpected value: " + patient.airOrOxygenObs);
+
         };
     }
     // The following method calculates the SpO2 score for the patient when they are breathing air
@@ -198,7 +216,7 @@ public class Patient {
     // These methods are called by the toString method of the Patient class
 
     public String AirOrOxygenComment() {
-        if (airOrOxygen == AirOrOxygen.AIR) {
+        if (airOrOxygenObs == 0) {
             return "The patient is breathing air, and does not require supplementary oxygen.";
         } else {
             return "The patient requires supplementary oxygen.";
@@ -206,7 +224,7 @@ public class Patient {
     }
 
     public String ConsciousnessComment() {
-        if (consciousness == Consciousness.ALERT) {
+        if (consciousnessObs == 0) {
             return "The patient is conscious";
         } else {
             return "The patient is unconscious or confused.";
@@ -214,9 +232,10 @@ public class Patient {
     }
     // The following method generates a comment for the SpO2 attribute
     public String Spo2Comment(Patient patient) {
-        return switch (patient.getAirOrOxygen()) {
-            case AIR -> Spo2CommentForAir();
-            case OXYGEN -> Spo2CommentForOxygen();
+        return switch (patient.airOrOxygenObs) {
+            case 0 -> Spo2CommentForAir();
+            case 2 -> Spo2CommentForOxygen();
+            default -> throw new java.lang.IllegalStateException("Unexpected value: " + patient.airOrOxygenObs);
         };
     }
     // The following method generates a comment for the SpO2 attribute when the patient is breathing air
@@ -268,9 +287,9 @@ public class Patient {
         sb.append(line);
         sb.append(String.format(format, "Property", "Observation", "Score", "Comment"));
         sb.append(line);
-        sb.append(String.format(format, "Air or Oxygen", airOrOxygen.getRespValue(), individualScores.get("Air or Oxygen Score"), AirOrOxygenComment()));
+        sb.append(String.format(format, "Air or Oxygen", airOrOxygenObs, individualScores.get("Air or Oxygen Score"), AirOrOxygenComment()));
         sb.append(line);
-        sb.append(String.format(format, "Consciousness", consciousness.getConsciousValue(), individualScores.get("Consciousness Score"), ConsciousnessComment()));
+        sb.append(String.format(format, "Consciousness", consciousnessObs , individualScores.get("Consciousness Score"), ConsciousnessComment()));
         sb.append(line);
         sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score"), ""));
         sb.append(line);
@@ -279,7 +298,6 @@ public class Patient {
         sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), " "));
         sb.append(line);
         sb.append("The patients final Medi score is ").append(individualScores.get("Final Score")).append("\n");
-        //System.out.println("Debug: individualScores = " + individualScores);
         return sb.toString();
     }
 }
