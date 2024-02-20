@@ -37,32 +37,39 @@ public class Patient {
     private float temperature;
     private int airOrOxygenObs;
     private int consciousnessObs;
+    private float CBG;
+    private boolean fasting;
     Map<String, Integer> individualScores = new HashMap<>();
     Map<String, Integer> previousMediScores = new HashMap<>();
 
     // Constructor for the Patient class
     public Patient(String name, int airOrOxygenObs, int consciousnessObs,
-                   Integer respirationRange, Integer spo2, float temperature) {
+                   Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
         this.name = name;
         this.airOrOxygenObs = airOrOxygenObs;
         this.consciousnessObs = consciousnessObs;
         this.respirationRange = respirationRange;
         this.spo2 = spo2;
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
+        this.CBG = Math.round(CBG * 10) / 10.0f;
+        this.fasting = fasting;
     }
 
     public void updatePatient(int airOrOxygenObs, int consciousnessObs,
-                              Integer respirationRange, Integer spo2, float temperature) {
+                              Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
         this.airOrOxygenObs = airOrOxygenObs;
         this.consciousnessObs = consciousnessObs;
         this.respirationRange = respirationRange;
         this.spo2 = spo2;
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
+        this.CBG = Math.round(CBG * 10) / 10.0f;
+        this.fasting = fasting;
     }
 
     public String getName() {
         return name;
     }
+
     public AirOrOxygen getAirOrOxygen() {
         return airOrOxygen;
     }
@@ -75,6 +82,7 @@ public class Patient {
         finalScore = patient.individualScores.get("Final Score");
         previousMediScores.put("Final Score", finalScore);
     }
+
     public void scoreAlert(Patient patient) {
         if (previousMediScores.isEmpty()) {
             System.out.println(patient.getName() + " Has no previous score to compare with.");
@@ -92,14 +100,15 @@ public class Patient {
         }
     }
 
-    public void printTable(Patient patient){
+
+    public void printTable(Patient patient) {
         System.out.println(patient);
     }
-
 
     public void clearMap(Map<String, Integer> map) {
         map.clear();
     }
+
     // Method to calculate the MediScore for the patient.
     // It gets individual scores from separate methods and then adds them up to get the final score.
     // It also stores the individual scores in a map.
@@ -110,7 +119,7 @@ public class Patient {
         individualScores.put("Respiration Range Score", calculateRespirationRateScore(patient));
         individualScores.put("SpO2 Score", calculateSpo2Score(patient));
         individualScores.put("Temperature Score", calculateTemperatureScore(patient));
-
+        individualScores.put("CBG Score", calculateCBGScore(patient));
         int finalScore = 0;
         for (Integer score : individualScores.values()) {
             finalScore += score;
@@ -132,6 +141,7 @@ public class Patient {
             return AirOrOxygen.OXYGEN.getRespValue();
         }
     }
+
     // The following method calculates the consciousness score for the patient
     private static int calculateConsciousnessScore(Patient patient) {
         if (patient.consciousnessObs == 0) {
@@ -140,6 +150,7 @@ public class Patient {
             return Consciousness.CVPU.getConsciousValue();
         }
     }
+
     // The following method calculates the respiration rate score for the patient
     private static int calculateRespirationRateScore(Patient patient) {
         int respirationRateScore;
@@ -156,6 +167,7 @@ public class Patient {
         }
         return respirationRateScore;
     }
+
     // The following methods calculate the SpO2 score for the patient
     // I used a switch statement to calculate the score based on whether
     // the patient is breathing air or oxygen
@@ -167,6 +179,7 @@ public class Patient {
 
         };
     }
+
     // The following method calculates the SpO2 score for the patient when they are breathing air
     private static int calculateSpo2ScoreForAir(Patient patient) {
         int spo2Score;
@@ -181,6 +194,7 @@ public class Patient {
         }
         return spo2Score;
     }
+
     // The following method calculates the SpO2 score for the patient when they are breathing oxygen
     private static int calculateSpo2ScoreForOxygen(Patient patient) {
         int spo2Score;
@@ -195,6 +209,7 @@ public class Patient {
         }
         return spo2Score;
     }
+
     // The following method calculates the temperature score for the patient
     private static int calculateTemperatureScore(Patient patient) {
         int temperatureScore;
@@ -210,6 +225,43 @@ public class Patient {
             temperatureScore = 3;
         }
         return temperatureScore;
+    }
+    private static int calculateCBGScore(Patient patient) {
+        if (patient.fasting) {
+            return calculateCBGFasting(patient);
+        } else {
+            return calculateCBGNotFasting(patient);
+        }
+    }
+    private static int calculateCBGFasting(Patient patient) {
+        int CBGScore = 0;
+        if (patient.CBG >= 6.0) {
+            CBGScore = 3;
+        } else if (patient.CBG >= 5.5) {
+            CBGScore = 2;
+        } else if (patient.CBG >= 4.0) {
+            CBGScore = 0;
+        } else if (patient.CBG >= 3.5 && patient.CBG < 3.9) {
+            CBGScore = 2;
+        } else if (patient.CBG <= 3.5) {
+            CBGScore = 2;
+        }
+        return CBGScore;
+    }
+    private static int calculateCBGNotFasting(Patient patient) {
+        int CBGScore = 0;
+        if (patient.CBG >= 9.0) {
+            CBGScore = 3;
+        } else if (patient.CBG >= 7.9) {
+            CBGScore = 2;
+        } else if (patient.CBG >= 5.9 && patient.CBG < 7.8) {
+            CBGScore = 0;
+        } else if (patient.CBG >= 4.5) {
+            CBGScore = 2;
+        } else if (patient.CBG <= 4.5) {
+            CBGScore = 3;
+        }
+        return CBGScore;
     }
 
     // The following methods are used to generate comments for the patient's attributes
@@ -230,6 +282,7 @@ public class Patient {
             return "The patient is unconscious or confused.";
         }
     }
+
     // The following method generates a comment for the SpO2 attribute
     public String Spo2Comment(Patient patient) {
         return switch (patient.airOrOxygenObs) {
@@ -238,6 +291,7 @@ public class Patient {
             default -> throw new java.lang.IllegalStateException("Unexpected value: " + patient.airOrOxygenObs);
         };
     }
+
     // The following method generates a comment for the SpO2 attribute when the patient is breathing air
     public String Spo2CommentForAir() {
         if (spo2 >= 97) {
@@ -256,6 +310,7 @@ public class Patient {
             return "The patient's oxygen saturation is dangerously low.";
         }
     }
+
     // The following method generates a comment for the SpO2 attribute when the patient is breathing oxygen
     public String Spo2CommentForOxygen() {
         if (spo2 >= 97) {
@@ -274,7 +329,33 @@ public class Patient {
             return "This is a very low range for patients breathing either air or oxygen.";
         }
     }
-
+    public String CBGComment() {
+        if (fasting) {
+            if (CBG >= 6.0) {
+                return "The patient is fasting and their blood sugar is high.";
+            } else if (CBG >= 5.5) {
+                return "The patient is fasting and their blood sugar is slightly high.";
+            } else if (CBG >= 4.0) {
+                return "The patient is fasting and their blood sugar is normal.";
+            } else if (CBG >= 3.5 && CBG < 3.9) {
+                return "The patient is fasting and their blood sugar is slightly low.";
+            } else {
+                return "The patient is fasting and their blood sugar is low.";
+            }
+        } else {
+            if (CBG >= 9.0) {
+                return "The patient isn't fasting so their blood sugar is high.";
+            } else if (CBG >= 7.9) {
+                return "The patient isn't fasting so their blood sugar is slightly high.";
+            } else if (CBG >= 5.9 && CBG < 7.8) {
+                return "The patient isn't fasting so their blood sugar is normal.";
+            } else if (CBG >= 4.5) {
+                return "The patient isn't fasting so their blood sugar is slightly low.";
+            } else {
+                return "The patient isn't fasting so their blood sugar is low.";
+            }
+        }
+    }
     // Override the toString method to display the patient's attributes and their scores with comments
     // The method also displays the patients name and the final score for the patient
     @Override
@@ -295,10 +376,11 @@ public class Patient {
         sb.append(line);
         sb.append(String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score"), Spo2Comment(this)));
         sb.append(line);
-        sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), " "));
+        sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), ""));
+        sb.append(line);
+        sb.append(String.format(format, "CBG", CBG, individualScores.get("CBG Score"), CBGComment()));
         sb.append(line);
         sb.append("The patients final Medi score is ").append(individualScores.get("Final Score")).append("\n");
         return sb.toString();
     }
 }
-
