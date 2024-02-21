@@ -1,13 +1,35 @@
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-
 /*
+ * ------------------------------------------------------------------------------
  *File: Patient.java
  * Author: Christopher Fairhurst
  * Date: 21st February 2024
- * Description:
+ * Description: This class represents a patient undergoing medical assessment and facilitates
+ * the calculation of their MediScore based on various vital signs.
+ * ------------------------------------------------------------------------------
+ * Key Features:
+ * Stores patient attributes like respiration, oxygen saturation, and consciousness level.
+ * Calculates a MediScore based on individual scores for each attribute.
+ * Provides comments to explain the individual scores and overall MediScore.
+ * Tracks changes in MediScore over time and alerts for significant increases.
+ * Utilises enums (AirOrOxygen and Consciousness) to represent observation values with assigned scores.
+ * ------------------------------------------------------------------------------
+ * Functionality:
+ * Update patient information with new vital signs.
+ * Calculate the MediScore based on current observations.
+ * Compare current MediScore to previous one and alert for significant changes.
+ * Generate comments to explain individual scores and MediScore interpretation.
+ * ------------------------------------------------------------------------------
+ * Usage:
+ * Create a Patient object with initial vital signs and fasting status.
+ * Update patient information using the updatePatient method to insert new vital sign readings.
+ * Call the calculateMediScore method to calculate the MediScore.
+ * Check for increases in Mediscore using the scoreAlert method.
+ * Access the individual scores and comments through respective methods.
+ * ------------------------------------------------------------------------------
  */
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Patient {
     // Enumeration for AirOrOxygen with integer values assigned to them
@@ -72,8 +94,7 @@ public class Patient {
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    // This is an update patient details method
-
+    // This is an update patient details method that allows the user to update the patient's details
     public void updatePatient(int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
         this.airOrOxygenObs = airOrOxygenObs;
         this.consciousnessObs = consciousnessObs;
@@ -279,7 +300,7 @@ public class Patient {
     }
 
     // This method first checks the previous scores hash map to check if the patient has a previous score
-    // It then subtracts the previous score from the current score and checks to see if it has raised by two points or more
+    // It then subtracts the previous score from the current score and checks to see if it has raised by more than 2 points
     // Within a 24-hour period of the previous score being taken
     // It then outputs the corresponding message to console
     // I know the messages should be returned and not printed straight from the method but time was
