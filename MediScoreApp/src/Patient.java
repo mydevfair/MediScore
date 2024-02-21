@@ -1,8 +1,18 @@
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+ *File: Patient.java
+ * Author: Christopher Fairhurst
+ * Date: 21st February 2024
+ * Description:
+ */
+
 public class Patient {
-    // Enumerations for AirOrOxygen and Consciousness with their respective values
+    // Enumeration for AirOrOxygen with integer values assigned to them
+    // Assigned values give the mediscore the individual scores for this
+    // Section of the assessment
     public enum AirOrOxygen {
         AIR(0), OXYGEN(2);
         private final int respValue;
@@ -16,6 +26,9 @@ public class Patient {
         }
     }
 
+    //Enumeration for Consciousness with integer values assigned to them
+    // Assigned values give the mediscore the individual scores for this
+    // Section of the assessment
     public enum Consciousness {
         ALERT(0), CVPU(3);
         private final int consciousValue;
@@ -31,7 +44,6 @@ public class Patient {
 
     // Attributes of the Patient class
     private String name;
-    private AirOrOxygen airOrOxygen;
     private Integer respirationRange;
     private Integer spo2;
     private float temperature;
@@ -39,12 +51,16 @@ public class Patient {
     private int consciousnessObs;
     private float CBG;
     private boolean fasting;
+    private Timestamp timestamp;
+    private Timestamp previousTimestamp;
     Map<String, Integer> individualScores = new HashMap<>();
     Map<String, Integer> previousMediScores = new HashMap<>();
 
     // Constructor for the Patient class
-    public Patient(String name, int airOrOxygenObs, int consciousnessObs,
-                   Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
+    // Creates an object of patient with the required statistics to assess the patients mediscore
+    // Rounds the float values to one decimal place as requested
+    // Also gives an enum(integer) value from int input for the observation value
+    public Patient(String name, int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
         this.name = name;
         this.airOrOxygenObs = airOrOxygenObs;
         this.consciousnessObs = consciousnessObs;
@@ -53,10 +69,12 @@ public class Patient {
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
         this.CBG = Math.round(CBG * 10) / 10.0f;
         this.fasting = fasting;
+        this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    public void updatePatient(int airOrOxygenObs, int consciousnessObs,
-                              Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
+    // This is an update patient details method
+
+    public void updatePatient(int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG, boolean fasting) {
         this.airOrOxygenObs = airOrOxygenObs;
         this.consciousnessObs = consciousnessObs;
         this.respirationRange = respirationRange;
@@ -64,56 +82,30 @@ public class Patient {
         this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
         this.CBG = Math.round(CBG * 10) / 10.0f;
         this.fasting = fasting;
+        this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
+    // getters
     public String getName() {
         return name;
     }
 
-    public AirOrOxygen getAirOrOxygen() {
-        return airOrOxygen;
+    public Timestamp getTimestamp() {
+        return timestamp;
     }
 
-    // Method to add the previous MediScore for the patient
-
-    public void addPreviousMediScore(Patient patient) {
-        int finalScore;
-        name = patient.getName();
-        finalScore = patient.individualScores.get("Final Score");
-        previousMediScores.put("Final Score", finalScore);
-    }
-
-    public void scoreAlert(Patient patient) {
-        if (previousMediScores.isEmpty()) {
-            System.out.println(patient.getName() + " Has no previous score to compare with.");
-        } else {
-            int previousScore = patient.previousMediScores.get("Final Score");
-            int newScore = patient.individualScores.get("Final Score");
-            int difference = newScore - previousScore;
-            if (previousMediScores.isEmpty()) {
-                System.out.println(patient.getName() + " Has no previous score to compare with.");
-            } else if (difference > 2) {
-                System.out.println("ALERT!!!! " + patient.getName() + " MediScore has changed by more than 2 points.");
-            } else {
-                System.out.println(patient.getName() + " MediScore has not changed by more than 2 points.");
-            }
-        }
-    }
-
-
-    public void printTable(Patient patient) {
-        System.out.println(patient);
-    }
-
-    public void clearMap(Map<String, Integer> map) {
-        map.clear();
+    public Timestamp getPreviousTimestamp() {
+        return previousTimestamp;
     }
 
     // Method to calculate the MediScore for the patient.
-    // It gets individual scores from separate methods and then adds them up to get the final score.
+    // It gets individual scores from separate methods and then loops through and
+    // adds them up to get the final score which is also then saved in the map.
+    // It then prints the mediscore table checks for a raise in score and then adds the details to
+    // The previous scores map for future comparison and then adds them up to get the final score.
     // It also stores the individual scores in a map.
     public void calculateMediScore(Patient patient) {
-        clearMap(individualScores);
+        clearMap(individualScores);// Clear the map to ensure it is empty before adding new scores
         individualScores.put("Air or Oxygen Score", calculateAirOrOxygenScore(patient));
         individualScores.put("Consciousness Score", calculateConsciousnessScore(patient));
         individualScores.put("Respiration Range Score", calculateRespirationRateScore(patient));
@@ -125,9 +117,9 @@ public class Patient {
             finalScore += score;
         }
         individualScores.put("Final Score", finalScore);
-        printTable(patient);
-        scoreAlert(patient);
-        addPreviousMediScore(patient);
+        printTable(patient); // Print the Mediscore table for the patient
+        scoreAlert(patient); // Check if the patient's score has raised by more than 2 points
+        addPreviousMediScore(patient); // Add the current score to the previous scores map
     }
 
     // Methods to calculate individual scores for each attribute of the patient
@@ -180,7 +172,8 @@ public class Patient {
         };
     }
 
-    // The following method calculates the SpO2 score for the patient when they are breathing air
+    // This is a child method that is called from the parents switch statement
+    // Calculates the score for a patient that is breathing air and not on oxygen
     private static int calculateSpo2ScoreForAir(Patient patient) {
         int spo2Score;
         if (patient.spo2 >= 93) {
@@ -195,7 +188,8 @@ public class Patient {
         return spo2Score;
     }
 
-    // The following method calculates the SpO2 score for the patient when they are breathing oxygen
+    // This is a child method that is called from the parents switch statement
+    // Calculates the score for a patient that is on oxygen supported breathing
     private static int calculateSpo2ScoreForOxygen(Patient patient) {
         int spo2Score;
         if (patient.spo2 >= 97) {
@@ -226,6 +220,12 @@ public class Patient {
         }
         return temperatureScore;
     }
+
+    // This is the method to calculate CBG score
+    // The architecture is the same as the air or oxygen method
+    // Except it uses a boolean value in an if else statement to decide whether
+    // the patient has eaten or is fasting
+    // Boolean = True for fasting || False if not fasting
     private static int calculateCBGScore(Patient patient) {
         if (patient.fasting) {
             return calculateCBGFasting(patient);
@@ -233,6 +233,8 @@ public class Patient {
             return calculateCBGNotFasting(patient);
         }
     }
+
+    // This is a support methods for CBG score that calculates the score for a patient that is fasting
     private static int calculateCBGFasting(Patient patient) {
         int CBGScore = 0;
         if (patient.CBG >= 6.0) {
@@ -248,6 +250,8 @@ public class Patient {
         }
         return CBGScore;
     }
+
+    // This is a support methods for CBG score that calculates the score for a patient that is not fasting
     private static int calculateCBGNotFasting(Patient patient) {
         int CBGScore = 0;
         if (patient.CBG >= 9.0) {
@@ -264,8 +268,68 @@ public class Patient {
         return CBGScore;
     }
 
+    // Method to print mediscore table for the patient which is called from calculate mediscore method
+    public void printTable(Patient patient) {
+        System.out.println(patient);
+    }
+
+    // This method clears the hashmap to ensure the mediscore method had a clear map to input scores into
+    public void clearMap(Map<String, Integer> map) {
+        map.clear();
+    }
+
+    // This method first checks the previous scores hash map to check if the patient has a previous score
+    // It then subtracts the previous score from the current score and checks to see if it has raised by two points or more
+    // Within a 24-hour period of the previous score being taken
+    // It then outputs the corresponding message to console
+    // I know the messages should be returned and not printed straight from the method but time was
+    // limited and I wanted to finish with a working version
+    public void scoreAlert(Patient patient) {
+        if (previousMediScores.isEmpty()) {
+            System.out.println(patient.getName() + " Has no previous score to compare with.");
+        } else {
+            Timestamp previousTimestamp = patient.getPreviousTimestamp();
+            Timestamp currentTimestamp = patient.getTimestamp();
+
+            if (previousTimestamp == null) {
+                System.out.println(patient.getName() + " Has no previous timestamp to compare with.");
+            } else {
+                long millisecondsInADay = 24 * 60 * 60 * 1000;
+                long timeDifference = currentTimestamp.getTime() - previousTimestamp.getTime();
+                boolean within24Hours = timeDifference <= millisecondsInADay;
+
+                if (within24Hours) {
+                    int previousScore = patient.previousMediScores.get("Final Score");
+                    int newScore = patient.individualScores.get("Final Score");
+                    int scoreDifference = newScore - previousScore;
+
+                    if (scoreDifference > 2) {
+                        System.out.println("ALERT!!!! " + patient.getName() + " MediScore has changed by more than 2 points in the last 24 hours.");
+                    } else {
+                        System.out.println(patient.getName() + " MediScore has not changed by more than 2 points in the last 24 hours.");
+                    }
+                } else {
+                    System.out.println("Previous Mediscore was taken more than 24 hours ago.");
+                }
+            }
+        }
+    }
+
+    // Method to add the previous MediScore for the patient
+    // Stores previous Mediscore in a HashMap so that it can be used
+    // when the score alert method is called and the current and previous
+    // scores can be compared
+    public void addPreviousMediScore(Patient patient) {
+        int finalScore;
+        name = patient.getName();
+        finalScore = patient.individualScores.get("Final Score");
+        previousMediScores.put("Final Score", finalScore);
+        previousTimestamp = patient.getTimestamp();
+    }
+
     // The following methods are used to generate comments for the patient's attributes
-    // These methods are called by the toString method of the Patient class
+    // These methods are called in the override for the toString method of the Patient class
+    // Comments are then inserted into the table to give a more detailed explanation of the patient's score
 
     public String AirOrOxygenComment() {
         if (airOrOxygenObs == 0) {
@@ -277,7 +341,7 @@ public class Patient {
 
     public String ConsciousnessComment() {
         if (consciousnessObs == 0) {
-            return "The patient is conscious";
+            return "The patient is conscious.";
         } else {
             return "The patient is unconscious or confused.";
         }
@@ -329,6 +393,9 @@ public class Patient {
             return "This is a very low range for patients breathing either air or oxygen.";
         }
     }
+
+    // The following method generates a comment for the CBG attribute giving different comments
+    // Depending on whether the patient is fasting or not
     public String CBGComment() {
         if (fasting) {
             if (CBG >= 6.0) {
@@ -356,31 +423,30 @@ public class Patient {
             }
         }
     }
+
     // Override the toString method to display the patient's attributes and their scores with comments
     // The method also displays the patients name and the final score for the patient
     @Override
     public String toString() {
         String format = "| %-17s | %-11s | %-5s | %-75s |\n";
         String line = "+-------------------+-------------+-------+-----------------------------------------------------------------------------+\n";
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        sb.append("Name: ").append(name).append("\n");
-        sb.append(line);
-        sb.append(String.format(format, "Property", "Observation", "Score", "Comment"));
-        sb.append(line);
-        sb.append(String.format(format, "Air or Oxygen", airOrOxygenObs, individualScores.get("Air or Oxygen Score"), AirOrOxygenComment()));
-        sb.append(line);
-        sb.append(String.format(format, "Consciousness", consciousnessObs , individualScores.get("Consciousness Score"), ConsciousnessComment()));
-        sb.append(line);
-        sb.append(String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score"), ""));
-        sb.append(line);
-        sb.append(String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score"), Spo2Comment(this)));
-        sb.append(line);
-        sb.append(String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), ""));
-        sb.append(line);
-        sb.append(String.format(format, "CBG", CBG, individualScores.get("CBG Score"), CBGComment()));
-        sb.append(line);
-        sb.append("The patients final Medi score is ").append(individualScores.get("Final Score")).append("\n");
-        return sb.toString();
+        return "\n" +
+                "Name: " + name + "\n" +
+                line +
+                String.format(format, "Property", "Observation", "Score", "Comment") +
+                line +
+                String.format(format, "Air or Oxygen", airOrOxygenObs, individualScores.get("Air or Oxygen Score"), AirOrOxygenComment()) +
+                line +
+                String.format(format, "Consciousness", consciousnessObs, individualScores.get("Consciousness Score"), ConsciousnessComment()) +
+                line +
+                String.format(format, "Respiration Range", respirationRange, individualScores.get("Respiration Range Score"), "") +
+                line +
+                String.format(format, "SpO2", spo2, individualScores.get("SpO2 Score"), Spo2Comment(this)) +
+                line +
+                String.format(format, "Temperature", temperature, individualScores.get("Temperature Score"), "") +
+                line +
+                String.format(format, "CBG", CBG, individualScores.get("CBG Score"), CBGComment()) +
+                line +
+                "The patient's final Medi score is " + individualScores.get("Final Score") + ".\n";
     }
 }
