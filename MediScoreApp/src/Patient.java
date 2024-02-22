@@ -96,19 +96,6 @@ public class Patient {
         validateData(name, airOrOxygenObs, consciousnessObs, respirationRange, spo2, temperature, CBG);
     }
 
-    // This is an update patient details method that allows the user to update the patient's details
-    public void updatePatient(int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG, boolean isFasting) {
-        this.airOrOxygenObs = airOrOxygenObs;
-        this.consciousnessObs = consciousnessObs;
-        this.respirationRange = respirationRange;
-        this.spo2 = spo2;
-        this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
-        this.CBG = Math.round(CBG * 10) / 10.0f;
-        this.isFasting = isFasting;
-        this.timestamp = new Timestamp(System.currentTimeMillis());
-        validateUpdateData(airOrOxygenObs, consciousnessObs, respirationRange, spo2, temperature, CBG);
-    }
-
     // This is a private method to validate the data input for the patient Constructor and ensure it is within the correct range
     private void validateData(String name, int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG) {
         if (airOrOxygenObs != 0 && airOrOxygenObs != 2) {
@@ -132,6 +119,19 @@ public class Patient {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Invalid name value.");
         }
+    }
+
+    // This is an update patient details method that allows the user to update the patient's details
+    public void updatePatient(int airOrOxygenObs, int consciousnessObs, Integer respirationRange, Integer spo2, float temperature, float CBG, boolean isFasting) {
+        this.airOrOxygenObs = airOrOxygenObs;
+        this.consciousnessObs = consciousnessObs;
+        this.respirationRange = respirationRange;
+        this.spo2 = spo2;
+        this.temperature = Math.round(temperature * 10) / 10.0f; // Rounding the temperature to 1 decimal place
+        this.CBG = Math.round(CBG * 10) / 10.0f;
+        this.isFasting = isFasting;
+        this.timestamp = new Timestamp(System.currentTimeMillis());
+        validateUpdateData(airOrOxygenObs, consciousnessObs, respirationRange, spo2, temperature, CBG);
     }
 
     // This is a private method to validate the data input for the patient and updatePatient method and ensure it is within the correct range
