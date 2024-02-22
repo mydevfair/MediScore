@@ -7,10 +7,10 @@ public class Main {
                 0, 20, 95, 37.15638f, 7.0F, true);
 
         Patient patient2 = new Patient("Patient 2", 0,
-                2, 17, 80, 37.15638f, 9.0F, true);
+                1, 17, 80, 37.15638f, 9.0F, true);
 
-        Patient patient3 = new Patient("Patient 3", 2,
-                1, 23, 88, 38.54f, 6.0F, true);
+        Patient patient3 = new Patient("Patient 3", 2, 0,
+                 23, 88, 38.54f, 6.0F, true);
         // Calculate MediScore for each patient
         patient1.calculateMediScore(patient1);
         patient2.calculateMediScore(patient2);
