@@ -26,6 +26,7 @@ Create a Patient object with initial vital signs and fasting status.
 Update patient information using the updatePatient method as needed.
 Call the calculateMediScore method to calculate the updated MediScore.
 Access the individual scores and comments through respective methods.
+Timestamps each creation and update of patient records.
 Compare the current score with the previous to flag alerts in condition.
 
 Please view this in raw format to view the tables as they are printed to console.
