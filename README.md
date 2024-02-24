@@ -27,6 +27,8 @@ Update patient information using the updatePatient method as needed.
 Call the calculateMediScore method to calculate the updated MediScore.
 Access the individual scores and comments through respective methods.
 
+Please view this in raw format to view the tables as they are printed to console.
+
 Name: Patient 1
 +-------------------+-------------+-------+-----------------------------------------------------------------------------+
 | Property          | Observation | Score | Comment                                                                     |
@@ -146,3 +148,5 @@ Name: Patient 3
 The patient's final Medi score is 10.
 
 Patient 3 MediScore has not changed by more than 2 points in the last 24 hours.
+
+
