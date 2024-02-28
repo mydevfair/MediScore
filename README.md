@@ -8,6 +8,7 @@ Calculates a MediScore based on individual scores for each attribute.
 Provides comments to explain the individual scores and overall MediScore.
 Tracks changes in MediScore over time and alerts for significant increases.
 Uses enums (AirOrOxygen and Consciousness) to represent observation values with assigned scores.
+
 Functionality:
 
 Update patient information with new vital signs.
